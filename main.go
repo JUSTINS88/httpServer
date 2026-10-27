@@ -38,7 +38,7 @@ func main() {
 	mux.Handle("/app/", cfg.middlewareMetricsInt(http.StripPrefix("/app", http.FileServer(http.Dir(path)))))
 	mux.HandleFunc("GET /admin/metrics", cfg.handleMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerDeleteAllUsers)
-	mux.HandleFunc("POST /api/validate_chirp", handlerValidation)
+	mux.HandleFunc("POST /api/chirps", cfg.createChrips)
 	mux.HandleFunc("POST /api/users", cfg.handlerCreateUser)
 
 	serverr := &http.Server{
