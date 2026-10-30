@@ -14,7 +14,7 @@ type Sender struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-type Chrips struct {
+type Chrip struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -38,7 +38,7 @@ func (cfg *apiConfig) createChrips(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := Chrips{
+	resp := Chrip{
 		ID:        res.ID,
 		CreatedAt: res.CreatedAt,
 		UpdatedAt: res.UpdatedAt,
