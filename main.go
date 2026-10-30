@@ -15,6 +15,7 @@ func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	Platform := os.Getenv("PLATFORM")
+	JWT_Secret := os.Getenv("JWT_SECRET")
 
 	db, err := sql.Open("postgres", dbURL)
 	dbQueries := database.New(db)
@@ -22,8 +23,9 @@ func main() {
 	const path = "."
 	const port = "8080"
 	cfg := &apiConfig{
-		db:       dbQueries,
-		platform: Platform,
+		db:        dbQueries,
+		platform:  Platform,
+		jwtSecret: JWT_Secret,
 	}
 
 	mux := http.NewServeMux()
@@ -38,7 +40,7 @@ func main() {
 	mux.Handle("/app/", cfg.middlewareMetricsInt(http.StripPrefix("/app", http.FileServer(http.Dir(path)))))
 	mux.HandleFunc("GET /admin/metrics", cfg.handleMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerDeleteAllUsers)
-	mux.HandleFunc("POST /api/chirps", cfg.createChrips)
+	mux.HandleFunc("POST /api/chirps", cfg.createChirps)
 	mux.HandleFunc("POST /api/users", cfg.handlerCreateUser)
 	mux.HandleFunc("POST /api/login", cfg.handlerUserLogin)
 	mux.HandleFunc("GET /api/chirps", cfg.GetAllChirps)
