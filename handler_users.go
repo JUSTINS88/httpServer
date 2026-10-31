@@ -4,24 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/JUSTINS88/serverr/internal/auth"
 	"github.com/JUSTINS88/serverr/internal/database"
-	"github.com/google/uuid"
 )
-
-type createUser struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-}
-
-type createUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	var dataUser createUserRequest

@@ -3,24 +3,10 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/JUSTINS88/serverr/internal/auth"
 	"github.com/JUSTINS88/serverr/internal/database"
-	"github.com/google/uuid"
 )
-
-type Sender struct {
-	Body string `json:"body"`
-}
-
-type Chirp struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Body      string    `json:"body"`
-	UserID    uuid.UUID `json:"user_id"`
-}
 
 func (cfg *apiConfig) createChirps(w http.ResponseWriter, r *http.Request) {
 	var sender Sender

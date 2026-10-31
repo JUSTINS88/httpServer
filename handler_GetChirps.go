@@ -13,9 +13,9 @@ func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var resp []Chrip
+	var resp []Chirp
 	for i, _ := range res {
-		resp = append(resp, Chrip{
+		resp = append(resp, Chirp{
 			ID:        res[i].ID,
 			CreatedAt: res[i].CreatedAt,
 			UpdatedAt: res[i].UpdatedAt,
@@ -41,7 +41,7 @@ func (cfg *apiConfig) GetChirpsByID(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	respondWithJSON(w, http.StatusOK, Chrip{
+	respondWithJSON(w, http.StatusOK, Chirp{
 		ID:        msg.ID,
 		CreatedAt: msg.CreatedAt,
 		UpdatedAt: msg.UpdatedAt,

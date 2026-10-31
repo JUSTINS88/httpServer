@@ -7,22 +7,7 @@ import (
 
 	"github.com/JUSTINS88/serverr/internal/auth"
 	"github.com/JUSTINS88/serverr/internal/database"
-	"github.com/google/uuid"
 )
-
-type login struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type loginUser struct {
-	ID           uuid.UUID `json:"id"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	Email        string    `json:"email"`
-	Token        string    `json:"token"`
-	RefreshToken string    `json:"refresh_token"`
-}
 
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	var user login
@@ -62,7 +47,7 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	refreshToken := auth.MakeRefreshToken()
 
-	refreshTokenInDB, err := cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+	_, err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
 		Token:     refreshToken,
 		UserID:    userData.ID,
 		ExpiresAt: expiresRefreshToken,

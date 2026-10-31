@@ -3,17 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"sync/atomic"
-
-	"github.com/JUSTINS88/serverr/internal/database"
 )
-
-type apiConfig struct {
-	fileserverHits atomic.Int32
-	db             *database.Queries
-	platform       string
-	jwtSecret      string
-}
 
 func (cfg *apiConfig) middlewareMetricsInt(next http.Handler) http.Handler {
 	return http.HandlerFunc(
