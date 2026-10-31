@@ -7,6 +7,7 @@ import (
 
 	"github.com/JUSTINS88/serverr/internal/auth"
 	"github.com/JUSTINS88/serverr/internal/database"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -34,9 +35,7 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Access Token
-	durationAccessToken := time.Duration(1) * time.Hour
-
-	accessToken, err := auth.MakeJWT(userData.ID, cfg.jwtSecret, durationAccessToken)
+	accessToken, err := cfg.makeAccessToken(userData.ID)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -66,4 +65,14 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 		Token:        accessToken,
 		RefreshToken: refreshToken,
 	})
+}
+
+func (cfg *apiConfig) makeAccessToken(userID uuid.UUID) (string, error) {
+	durationAccessToken := time.Duration(1) * time.Hour
+
+	accessToken, err := auth.MakeJWT(userID, cfg.jwtSecret, durationAccessToken)
+	if err != nil {
+		return "", err
+	}
+	return accessToken, nil
 }
