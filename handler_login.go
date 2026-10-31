@@ -6,21 +6,22 @@ import (
 	"time"
 
 	"github.com/JUSTINS88/serverr/internal/auth"
+	"github.com/JUSTINS88/serverr/internal/database"
 	"github.com/google/uuid"
 )
 
 type login struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type loginUser struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID           uuid.UUID `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -32,39 +33,52 @@ func (cfg *apiConfig) handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 
 	userData, err := cfg.db.GetUserByEmail(r.Context(), user.Email)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		respondWithError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	// Hashed PAssword Checking
-	hash, err := auth.CheckPasswordHash(user.Password, userData.HashedPassword)
+	pwMatch, err := auth.CheckPasswordHash(user.Password, userData.HashedPassword)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if !hash {
+	if !pwMatch {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password")
 		return
 	}
 
-	//JWT
-	duration := user.ExpiresInSeconds
-	if duration == 0 || duration > 3600 {
-		duration = 3600
-	}
+	//Access Token
+	durationAccessToken := time.Duration(1) * time.Hour
 
-	JWTUser, err := auth.MakeJWT(userData.ID, cfg.jwtSecret, time.Duration(duration)*time.Second)
+	accessToken, err := auth.MakeJWT(userData.ID, cfg.jwtSecret, durationAccessToken)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
+	// Refresh Token
+	expiresRefreshToken := time.Now().Add(time.Duration(60*24) * time.Hour)
+
+	refreshToken := auth.MakeRefreshToken()
+
+	refreshTokenInDB, err := cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		UserID:    userData.ID,
+		ExpiresAt: expiresRefreshToken,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Gagal membuat Refresh Token")
+		return
+	}
+
 	// Response
 	respondWithJSON(w, http.StatusOK, loginUser{
-		ID:        userData.ID,
-		CreatedAt: userData.CreatedAt,
-		UpdatedAt: userData.UpdatedAt,
-		Email:     userData.Email,
-		Token:     JWTUser,
+		ID:           userData.ID,
+		CreatedAt:    userData.CreatedAt,
+		UpdatedAt:    userData.UpdatedAt,
+		Email:        userData.Email,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	})
 }
