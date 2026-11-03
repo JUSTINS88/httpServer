@@ -16,6 +16,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	Platform := os.Getenv("PLATFORM")
 	JWT_Secret := os.Getenv("JWT_SECRET")
+	ApiKey := os.Getenv("POLKA_KEY")
 
 	db, err := sql.Open("postgres", dbURL)
 	dbQueries := database.New(db)
@@ -26,6 +27,7 @@ func main() {
 		db:        dbQueries,
 		platform:  Platform,
 		jwtSecret: JWT_Secret,
+		apiKey:    ApiKey,
 	}
 
 	mux := http.NewServeMux()

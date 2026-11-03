@@ -13,6 +13,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	apiKey         string
 }
 
 type createUser struct {

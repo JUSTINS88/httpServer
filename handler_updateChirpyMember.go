@@ -6,18 +6,32 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/JUSTINS88/serverr/internal/auth"
 	"github.com/google/uuid"
 )
 
-type webhookPayload struct {
-	Event string   `json:"event"`
-	Data  userData `json:"data"`
-}
-type userData struct {
-	UserID string `json:"user_id"`
-}
-
 func (cfg *apiConfig) hanlderUpdateUserMember(w http.ResponseWriter, r *http.Request) {
+	// Check ApiKey
+	polkaKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	if polkaKey != cfg.apiKey {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// declare struct webhook
+	type webhookPayload struct {
+		Event string `json:"event"`
+		Data  struct {
+			UserID uuid.UUID `json:"user_id"`
+		} `json:"data"`
+	}
+
+	// Check identity
 	defer r.Body.Close()
 	var user webhookPayload
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -30,13 +44,7 @@ func (cfg *apiConfig) hanlderUpdateUserMember(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userID, err := uuid.Parse(user.Data.UserID)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	_, err = cfg.db.UpdateChirpyMember(r.Context(), userID)
+	_, err = cfg.db.UpdateChirpyMember(r.Context(), user.Data.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			respondWithError(w, http.StatusNotFound, "User not found")
