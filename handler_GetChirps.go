@@ -2,25 +2,57 @@ package main
 
 import (
 	"net/http"
+	"slices"
 
+	"github.com/JUSTINS88/serverr/internal/database"
 	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
-	res, err := cfg.db.GetAllChirps(r.Context())
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
+	author := r.URL.Query().Get("author_id")
+
+	var res []database.Chirp
+	var err error
+	if author != "" {
+		authorUUID, err := uuid.Parse(author)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err = cfg.db.GetAllChirpsByAuthorID(r.Context(), authorUUID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Cannot load Chrips")
+			return
+		}
+	} else {
+		res, err = cfg.db.GetAllChirps(r.Context())
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Cannot load Chrips")
+			return
+		}
 	}
 
-	var resp []Chirp
-	for i, _ := range res {
+	resp := make([]Chirp, 0, len(res))
+	for _, dbChrip := range res {
 		resp = append(resp, Chirp{
-			ID:        res[i].ID,
-			CreatedAt: res[i].CreatedAt,
-			UpdatedAt: res[i].UpdatedAt,
-			Body:      res[i].Body,
-			UserID:    res[i].UserID,
+			ID:        dbChrip.ID,
+			CreatedAt: dbChrip.CreatedAt,
+			UpdatedAt: dbChrip.UpdatedAt,
+			Body:      dbChrip.Body,
+			UserID:    dbChrip.UserID,
+		})
+	}
+
+	// Sorting Chirp
+	sortChirp := r.URL.Query().Get("sort")
+	if sortChirp == "desc" {
+		slices.SortFunc(resp, func(a, b Chirp) int {
+			return b.CreatedAt.Compare(a.CreatedAt)
+		})
+	} else {
+		slices.SortFunc(resp, func(a, b Chirp) int {
+			return a.CreatedAt.Compare(b.CreatedAt)
 		})
 	}
 
